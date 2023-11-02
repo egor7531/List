@@ -30,6 +30,11 @@ int main()
             scanf("%d", &x);
             push_front(&lst, x);
         }
+        else if(cmd == 2)
+        {
+            scanf("%d", &x);
+            push_back(&lst, x);
+        }
         else if(cmd == 0)
             break;
 

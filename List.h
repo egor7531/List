@@ -23,5 +23,6 @@ const int BOUNDARY_LIST = 0;
 void list_ctor(List * lst);
 void insert(List * lst, const int index, const int value);
 void push_front(List * lst, const elem_t value);
+void push_back(List * lst, const elem_t value);
 
 #endif //LIST_H_INCLUDED

@@ -76,3 +76,23 @@ void push_front(List * lst, const elem_t value)
     lst->size++;
     lst->free++;
 }
+
+void push_back(List * lst, const elem_t value)
+{
+    assert(lst != NULL);
+
+    lst->data[lst->free] = value;
+    lst->next[lst->free] = 0;
+    lst->prev[lst->free] = lst->prev[0];
+
+    lst->next[lst->tail] = lst->free;
+    lst->prev[0] = lst->free;
+
+    lst->tail = lst->free;
+
+    if(lst->size == 0)
+        lst->head = lst->free;
+
+    lst->size++;
+    lst->free++;
+}

@@ -6,6 +6,8 @@
 
 void list_dump(List * lst)
 {
+    assert(lst != NULL);
+
     const char * fileName = "Dump.txt";
     FILE * fp = fopen(fileName, "w");
 
@@ -23,19 +25,40 @@ void list_dump(List * lst)
 
     fprintf(fp, "\n" "%*s", width, "data");
     for(int i = 0; i < lst->capacity; i++)
-        fprintf(fp, "%*d", width, lst->data[i]);
+    {
+        if(i == lst->head)
+            fprintf(fp, "%*d>", width, lst->data[i]);
+        else if(i == lst->tail)
+            fprintf(fp, "%*d]", width, lst->data[i]);
+        else
+            fprintf(fp, "%*d", width, lst->data[i]);
+    }
 
     fprintf(fp, "\n" "%*s", width, "next");
     for(int i = 0; i < lst->capacity; i++)
-        fprintf(fp, "%*d", width, lst->next[i]);
+    {
+        if(i == lst->head)
+            fprintf(fp, "%*d>", width, lst->next[i]);
+        else if(i == lst->tail)
+            fprintf(fp, "%*d]", width, lst->next[i]);
+        else
+            fprintf(fp, "%*d", width, lst->next[i]);
+    }
 
     fprintf(fp, "\n" "%*s", width, "prev");
     for(int i = 0; i < lst->capacity; i++)
-        fprintf(fp, "%*d", width, lst->prev[i]);
+    {
+        if(i == lst->head)
+            fprintf(fp, "%*d>", width, lst->prev[i]);
+        else if(i == lst->tail)
+            fprintf(fp, "%*d]", width, lst->prev[i]);
+        else
+            fprintf(fp, "%*d", width, lst->prev[i]);
+    }
 
-    fprintf(fp, "\n" "[free = %d]\n", lst->free);
+    fprintf(fp, "\n" "free = %d\n", lst->free);
     fprintf(fp, "<head = %d>\n", lst->head);
-    fprintf(fp, "<tail = %d>\n", lst->tail);
+    fprintf(fp, "[tail = %d]\n", lst->tail);
     fprintf(fp, "size = %d\n", lst->size);
     fprintf(fp, "capacity = %d\n", lst->capacity);
 
