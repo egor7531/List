@@ -67,13 +67,12 @@ void push_front(List * lst, const elem_t value)
 
     lst->next[0] = lst->free;
     lst->prev[lst->head] = lst->free;
-
     lst->head = lst->free;
+    lst->size++;
 
-    if(lst->size == 0)
+    if(lst->size == 1)
         lst->tail = lst->free;
 
-    lst->size++;
     lst->free++;
 }
 
@@ -87,12 +86,57 @@ void push_back(List * lst, const elem_t value)
 
     lst->next[lst->tail] = lst->free;
     lst->prev[0] = lst->free;
-
     lst->tail = lst->free;
+    lst->size++;
 
-    if(lst->size == 0)
+    if(lst->size == 1)
         lst->head = lst->free;
 
-    lst->size++;
     lst->free++;
+}
+
+void pop_front(List * lst, elem_t * value)
+{
+    assert(lst != NULL);
+    assert(value != NULL);
+
+    *value = lst->data[lst->head];
+
+    lst->free = lst->head;
+    lst->head = lst->next[lst->head];
+
+    lst->data[lst->free] = 0;
+    lst->next[lst->free] = FREE_TESTICLE;
+    lst->prev[lst->free] = FREE_TESTICLE;
+
+    lst->next[0] = lst->head;
+    lst->prev[lst->head] = 0;
+
+    lst->size--;
+
+    if(lst->size == 0)
+        lst->tail = 0;
+}
+
+void pop_back(List * lst, elem_t * value)
+{
+    assert(lst != NULL);
+    assert(value != NULL);
+
+    *value = lst->data[lst->tail];
+
+    lst->free = lst->tail;
+    lst->tail = lst->prev[lst->tail];
+
+    lst->data[lst->free] = 0;
+    lst->next[lst->free] = FREE_TESTICLE;
+    lst->prev[lst->free] = FREE_TESTICLE;
+
+    lst->next[lst->tail] = 0;
+    lst->prev[0] = lst->tail;
+
+    lst->size--;
+
+    if(lst->size == 0)
+        lst->head = 0;
 }
