@@ -41,20 +41,21 @@ void list_ctor(List * lst)
         lst->prev[i] = FREE_TESTICLE;
 }
 
-void insert(List * lst, const int index, const elem_t value)
+void list_dtor(List * lst)
 {
-    assert(lst != NULL);
-    assert(index >= 0);
+    lst->size = 0;
+    lst->capacity = 0;
+    lst->free =0;
+    lst->head = 0;
+    lst->tail = 0;
 
-    lst->data[lst->free] = value;
-    lst->next[lst->free] = index;
-    lst->prev[lst->free] = index - 1;
+    free(lst->data);
+    free(lst->next);
+    free(lst->prev);
 
-    lst->next[index - 1] = lst->free;
-    lst->prev[index] = lst->free - 1;
-
-    lst->free = lst->next[lst->free];
-    lst->size++;
+    lst->data = NULL;
+    lst->next = NULL;
+    lst->prev = NULL;
 }
 
 void push_front(List * lst, const elem_t value)
@@ -140,3 +141,80 @@ void pop_back(List * lst, elem_t * value)
     if(lst->size == 0)
         lst->head = 0;
 }
+
+void list_insert(List * lst, const int index, const elem_t value)
+{
+    assert(lst != NULL);
+    assert(index >= 0);                    //Как обрабатывать случай, когда index > size?
+
+    int i = list_search(lst, index);
+
+    if(i == lst->head)
+        push_front(lst, value);
+    else if(i == lst->tail)
+        push_back(lst, value);
+    else
+    {
+        lst->data[lst->free] = value;
+        lst->next[lst->free] = i;
+        lst->prev[lst->free] = lst->prev[i];
+
+        lst->next[lst->prev[i]] = lst->free;
+        lst->prev[i] = lst->free;
+
+        lst->free++;
+        lst->size++;
+    }
+}
+
+void list_delete(List * lst, const int index, elem_t * value)
+{
+    assert(lst != NULL);
+    assert(index >= 0);
+    assert(value != NULL);
+
+    int i = list_search(lst, index);
+
+    if(i == lst->head)
+        pop_front(lst, value);
+    else if(i == lst->tail)
+        pop_back(lst, value);
+    else
+    {
+        *value = lst->data[i];
+
+        lst->free = i;
+
+        lst->next[lst->prev[i]] = lst->next[i];
+        lst->prev[lst->next[i]] = lst->prev[i];
+
+        lst->data[i] = 0;
+        lst->next[i] = FREE_TESTICLE;
+        lst->prev[i] = FREE_TESTICLE;
+
+        lst->size--;
+    }
+}
+
+int list_search(List * lst, const int index)
+{
+    assert(lst != NULL);
+    assert(index >= 0);
+
+    int i = 0;
+    if(index <= lst->size / 2)
+    {
+        i = lst->next[0];
+        for(int j = 1; j != index; j++)
+            i = lst->next[i];
+    }
+    else
+    {
+        i = lst->prev[0];
+        for(int j = lst->size; j != index; j--)
+            i = lst->prev[i];
+    }
+
+    return i;
+}
+
