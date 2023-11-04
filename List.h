@@ -18,15 +18,16 @@ struct List
 const int INITIAL_CAPACITY = 10;
 const int POISON = -69;
 const int FREE_TESTICLE = -1;
-const int BOUNDARY_LIST = 0;
 
 void list_ctor(List * lst);
 void list_dtor(List * lst);
-void push_front(List * lst, const elem_t value);
-void push_back(List * lst, const elem_t value);
-void pop_front(List * lst, elem_t * value);
-void pop_back(List * lst, elem_t * value);
-void list_insert(List * lst, const int index, const int value);
-void list_delete(List * lst, const int index, elem_t * value);
+int push_front(List * lst, const elem_t value);
+int push_back(List * lst, const elem_t value);
+int pop_front(List * lst, elem_t * value);
+int pop_back(List * lst, elem_t * value);
+int list_insert_after(List * lst, const int index, const elem_t value);
+int list_insert_before(List * lst, const int index, const elem_t value);
+int list_delete(List * lst, const int index, elem_t * value);
 int list_search(List * lst, const int index);
+
 #endif //LIST_H_INCLUDED

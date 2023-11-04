@@ -58,7 +58,7 @@ void list_dtor(List * lst)
     lst->prev = NULL;
 }
 
-void push_front(List * lst, const elem_t value)
+int push_front(List * lst, const elem_t value)
 {
     assert(lst != NULL);
 
@@ -75,9 +75,11 @@ void push_front(List * lst, const elem_t value)
         lst->tail = lst->free;
 
     lst->free++;
+
+    return lst->free - 1;
 }
 
-void push_back(List * lst, const elem_t value)
+int push_back(List * lst, const elem_t value)
 {
     assert(lst != NULL);
 
@@ -94,9 +96,11 @@ void push_back(List * lst, const elem_t value)
         lst->head = lst->free;
 
     lst->free++;
+
+    return lst->free - 1;
 }
 
-void pop_front(List * lst, elem_t * value)
+int pop_front(List * lst, elem_t * value)
 {
     assert(lst != NULL);
     assert(value != NULL);
@@ -117,9 +121,11 @@ void pop_front(List * lst, elem_t * value)
 
     if(lst->size == 0)
         lst->tail = 0;
+
+    return lst->free;
 }
 
-void pop_back(List * lst, elem_t * value)
+int pop_back(List * lst, elem_t * value)
 {
     assert(lst != NULL);
     assert(value != NULL);
@@ -140,60 +146,77 @@ void pop_back(List * lst, elem_t * value)
 
     if(lst->size == 0)
         lst->head = 0;
+
+    return lst->free;
 }
 
-void list_insert(List * lst, const int index, const elem_t value)
+int list_insert_before(List * lst, const int index, const elem_t value)
 {
     assert(lst != NULL);
-    assert(index >= 0);                    //Как обрабатывать случай, когда index > size?
+    assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
 
-    int i = list_search(lst, index);
+    if(index == lst->head)
+        return push_front(lst, value);
 
-    if(i == lst->head)
-        push_front(lst, value);
-    else if(i == lst->tail)
-        push_back(lst, value);
-    else
-    {
-        lst->data[lst->free] = value;
-        lst->next[lst->free] = i;
-        lst->prev[lst->free] = lst->prev[i];
+    lst->data[lst->free] = value;
+    lst->next[lst->free] = index;
+    lst->prev[lst->free] = lst->prev[index];
 
-        lst->next[lst->prev[i]] = lst->free;
-        lst->prev[i] = lst->free;
+    lst->next[lst->prev[index]] = lst->free;
+    lst->prev[index] = lst->free;
 
-        lst->free++;
-        lst->size++;
-    }
+    lst->free++;
+    lst->size++;
+
+    return lst->free - 1;
 }
 
-void list_delete(List * lst, const int index, elem_t * value)
+int list_insert_after(List * lst, const int index, const elem_t value)
+{
+    assert(lst != NULL);
+    assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
+
+    if(index == lst->tail)
+        return push_back(lst, value);
+
+    lst->data[lst->free] = value;
+    lst->next[lst->free] = lst->next[index];
+    lst->prev[lst->free] = index;
+
+    lst->prev[lst->next[index]] = lst->free;
+    lst->next[index] = lst->free;
+
+    lst->free++;
+    lst->size++;
+
+    return lst->free - 1;
+}
+
+int list_delete(List * lst, const int index, elem_t * value)
 {
     assert(lst != NULL);
     assert(index >= 0);
     assert(value != NULL);
 
-    int i = list_search(lst, index);
+    if(index == lst->head)
+        return pop_front(lst, value);
+    else if(index == lst->tail)
+        return pop_back(lst, value);
 
-    if(i == lst->head)
-        pop_front(lst, value);
-    else if(i == lst->tail)
-        pop_back(lst, value);
-    else
-    {
-        *value = lst->data[i];
+    *value = lst->data[index];
 
-        lst->free = i;
+    lst->free = index;
 
-        lst->next[lst->prev[i]] = lst->next[i];
-        lst->prev[lst->next[i]] = lst->prev[i];
+    lst->next[lst->prev[index]] = lst->next[index];
+    lst->prev[lst->next[index]] = lst->prev[index];
 
-        lst->data[i] = 0;
-        lst->next[i] = FREE_TESTICLE;
-        lst->prev[i] = FREE_TESTICLE;
+    lst->data[index] = 0;
+    lst->next[index] = FREE_TESTICLE;
+    lst->prev[index] = FREE_TESTICLE;
 
-        lst->size--;
-    }
+    lst->size--;
+
+    return lst->free;
 }
 
 int list_search(List * lst, const int index)
