@@ -3,6 +3,13 @@
 
 typedef int elem_t;
 
+struct ListNode
+{
+    elem_t * data;
+    int * next;
+    int * prev;
+};
+
 struct List
 {
     int capacity;
@@ -10,24 +17,20 @@ struct List
     int head;
     int tail;
     int free;
-    elem_t * data;
-    int * next;
-    int * prev;
+    ListNode node;
 };
 
-const int INITIAL_CAPACITY = 10;
-const int POISON = -69;
-const int FREE_TESTICLE = -1;
+void list_ctor(List * list);
+void list_dtor(List * list);
 
-void list_ctor(List * lst);
-void list_dtor(List * lst);
-int push_front(List * lst, const elem_t value);
-int push_back(List * lst, const elem_t value);
-int pop_front(List * lst, elem_t * value);
-int pop_back(List * lst, elem_t * value);
-int list_insert_after(List * lst, const int index, const elem_t value);
-int list_insert_before(List * lst, const int index, const elem_t value);
-int list_delete(List * lst, const int index, elem_t * value);
-int list_search(List * lst, const int index);
+int push_front(List * list, const elem_t value);
+int push_back(List * list, const elem_t value);
+int pop_front(List * list, elem_t * value);
+int pop_back(List * list, elem_t * value);
+
+int list_insert_after(List * list, const int index, const elem_t value);
+int list_insert_before(List * list, const int index, const elem_t value);
+int list_delete(List * list, const int index, elem_t * value);
+int list_search(List * list, const int index);
 
 #endif //LIST_H_INCLUDED

@@ -4,12 +4,12 @@
 
 #include "ListDump.h"
 
-void list_dump(List * lst)
+void list_dump(List * list)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
 
     const char * fileName = "Dump.txt";
-    FILE * fp = fopen(fileName, "w");
+    FILE * fp = fopen(fileName, "wb");
 
     if(fp == NULL)
     {
@@ -20,47 +20,48 @@ void list_dump(List * lst)
     int width = 5;
 
     fprintf(fp, "%*s", width, "index");
-    for(int i = 0; i < lst->capacity; i++)
+    for(int i = 0; i < list->capacity; i++)
         fprintf(fp, "%*d", width, i);
 
     fprintf(fp, "\n" "%*s", width, "data");
-    for(int i = 0; i < lst->capacity; i++)
+    for(int i = 0; i < list->capacity; i++)
     {
-        if(i == lst->head)
-            fprintf(fp, "%*d>", width, lst->data[i]);
-        else if(i == lst->tail)
-            fprintf(fp, "%*d]", width, lst->data[i]);
+        if(i == list->head)
+            fprintf(fp, "%*d>", width, list->node.data[i]);
+        else if(i == list->tail)
+            fprintf(fp, "%*d]", width, list->node.data[i]);
         else
-            fprintf(fp, "%*d", width, lst->data[i]);
+            fprintf(fp, "%*d", width, list->node.data[i]);
     }
 
     fprintf(fp, "\n" "%*s", width, "next");
-    for(int i = 0; i < lst->capacity; i++)
+    for(int i = 0; i < list->capacity; i++)
     {
-        if(i == lst->head)
-            fprintf(fp, "%*d>", width, lst->next[i]);
-        else if(i == lst->tail)
-            fprintf(fp, "%*d]", width, lst->next[i]);
+        if(i == list->head)
+            fprintf(fp, "%*d>", width, list->node.next[i]);
+        else if(i == list->tail)
+            fprintf(fp, "%*d]", width, list->node.next[i]);
         else
-            fprintf(fp, "%*d", width, lst->next[i]);
+            fprintf(fp, "%*d", width, list->node.next[i]);
     }
 
     fprintf(fp, "\n" "%*s", width, "prev");
-    for(int i = 0; i < lst->capacity; i++)
+    for(int i = 0; i < list->capacity; i++)
     {
-        if(i == lst->head)
-            fprintf(fp, "%*d>", width, lst->prev[i]);
-        else if(i == lst->tail)
-            fprintf(fp, "%*d]", width, lst->prev[i]);
+        if(i == list->head)
+            fprintf(fp, "%*d>", width, list->node.prev[i]);
+        else if(i == list->tail)
+            fprintf(fp, "%*d]", width, list->node.prev[i]);
         else
-            fprintf(fp, "%*d", width, lst->prev[i]);
+            fprintf(fp, "%*d", width, list->node.prev[i]);
     }
 
-    fprintf(fp, "\n" "free = %d\n", lst->free);
-    fprintf(fp, "<head = %d>\n", lst->head);
-    fprintf(fp, "[tail = %d]\n", lst->tail);
-    fprintf(fp, "size = %d\n", lst->size);
-    fprintf(fp, "capacity = %d\n", lst->capacity);
+    fprintf(fp, "\n" "free = %d\n", list->free);
+    fprintf(fp, "<head = %d>\n", list->head);
+    fprintf(fp, "[tail = %d]\n", list->tail);
+    fprintf(fp, "size = %d\n", list->size);
+    fprintf(fp, "capacity = %d\n", list->capacity);
 
     fclose(fp);
 }
+

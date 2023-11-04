@@ -4,240 +4,243 @@
 
 #include "List.h"
 
-void list_ctor(List * lst)
+const int INITIAL_CAPACITY = 5;
+const int POISON = -69;
+const int FREE_TESTICLE = -1;
+
+void list_ctor(List * list)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
 
-    lst->size = 0;
-    lst->capacity = INITIAL_CAPACITY;
-    lst->free = 1;
-    lst->head = 0;
-    lst->tail = 0;
+    list->capacity = INITIAL_CAPACITY;
+    list->size = 0;
+    list->free = 1;
+    list->head = 0;
+    list->tail = 0;
 
-    lst->data = (elem_t *)calloc(lst->capacity, sizeof(elem_t));
-    if(lst->data == NULL)
+    list->node.data = (elem_t *)calloc(list->capacity,3 * sizeof(elem_t));
+
+    if(list->node.data  == NULL)
     {
         printf("Pointer on data is NULL\n");
         abort();
     }
-    lst->data[0] = POISON;
 
-    lst->next = (int *)calloc(lst->capacity, sizeof(int));
-    if(lst->next == NULL)
-    {
-        printf("Pointer on next is NULL\n");
-        abort();
-    }
-    for(int i = 1; i < lst->capacity; i++)
-        lst->next[i] = FREE_TESTICLE;
+    list->node.next = list->node.data + list->capacity;
+    list->node.prev = list->node.data + 2 * list->capacity;
 
-    lst->prev = (int *)calloc(lst->capacity, sizeof(int));
-    if(lst->prev == NULL)
-    {
-        printf("Pointer on prev is NULL\n");
-        abort();
-    }
-    for(int i = 1; i < lst->capacity; i++)
-        lst->prev[i] = FREE_TESTICLE;
+    list->node.data[0] = POISON;
+
+    for(int i = 1; i < list->capacity; i++)
+        list->node.next[i] = i + 1;
+
+    for(int i = 1; i < list->capacity; i++)
+        list->node.prev[i] = FREE_TESTICLE;
 }
 
-void list_dtor(List * lst)
+void list_dtor(List * list)
 {
-    lst->size = 0;
-    lst->capacity = 0;
-    lst->free =0;
-    lst->head = 0;
-    lst->tail = 0;
+    list->size = 0;
+    list->capacity = 0;
+    list->free = 0;
+    list->head = 0;
+    list->tail = 0;
 
-    free(lst->data);
-    free(lst->next);
-    free(lst->prev);
+    free(list->node.data);
+    free(list->node.next);
+    free(list->node.prev);
 
-    lst->data = NULL;
-    lst->next = NULL;
-    lst->prev = NULL;
+    list->node.data = NULL;
+    list->node.next = NULL;
+    list->node.prev = NULL;
 }
 
-int push_front(List * lst, const elem_t value)
+int push_front(List * list, const elem_t value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
 
-    lst->data[lst->free] = value;
-    lst->next[lst->free] = lst->next[0];
-    lst->prev[lst->free] = 0;
+    int free = list->free;
+    list->free = list->node.next[free];
 
-    lst->next[0] = lst->free;
-    lst->prev[lst->head] = lst->free;
-    lst->head = lst->free;
-    lst->size++;
+    list->node.data[free] = value;
+    list->node.next[free] = list->node.next[0];
+    list->node.prev[free] = 0;
 
-    if(lst->size == 1)
-        lst->tail = lst->free;
+    list->node.next[0] = free;
+    list->node.prev[list->head] = free;
+    list->head = free;
+    list->size++;
 
-    lst->free++;
+    if(list->size == 1)
+        list->tail = free;
 
-    return lst->free - 1;
+    return list->head;
 }
 
-int push_back(List * lst, const elem_t value)
+int push_back(List * list, const elem_t value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
 
-    lst->data[lst->free] = value;
-    lst->next[lst->free] = 0;
-    lst->prev[lst->free] = lst->prev[0];
+    int free = list->free;
+    list->free = list->node.next[free];
 
-    lst->next[lst->tail] = lst->free;
-    lst->prev[0] = lst->free;
-    lst->tail = lst->free;
-    lst->size++;
+    list->node.data[free] = value;
+    list->node.next[free] = 0;
+    list->node.prev[free] = list->node.prev[0];
 
-    if(lst->size == 1)
-        lst->head = lst->free;
+    list->node.next[list->tail] = free;
+    list->node.prev[0] = free;
+    list->tail = free;
+    list->size++;
 
-    lst->free++;
+    if(list->size == 1)
+        list->head = free;
 
-    return lst->free - 1;
+    return list->tail;
 }
 
-int pop_front(List * lst, elem_t * value)
+int pop_front(List * list, elem_t * value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(value != NULL);
 
-    *value = lst->data[lst->head];
+    *value = list->node.data[list->head];
 
-    lst->free = lst->head;
-    lst->head = lst->next[lst->head];
+    int free = list->free;
 
-    lst->data[lst->free] = 0;
-    lst->next[lst->free] = FREE_TESTICLE;
-    lst->prev[lst->free] = FREE_TESTICLE;
+    list->free = list->head;
+    list->head = list->node.next[list->head];
 
-    lst->next[0] = lst->head;
-    lst->prev[lst->head] = 0;
+    list->node.data[list->free] = 0;
+    list->node.next[list->free] = free;
+    list->node.prev[list->free] = FREE_TESTICLE;
 
-    lst->size--;
+    list->node.next[0] = list->head;
+    list->node.prev[list->head] = 0;
 
-    if(lst->size == 0)
-        lst->tail = 0;
+    list->size--;
 
-    return lst->free;
+    if(list->size == 0)
+        list->tail = 0;
+
+    return list->free;
 }
 
-int pop_back(List * lst, elem_t * value)
+int pop_back(List * list, elem_t * value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(value != NULL);
 
-    *value = lst->data[lst->tail];
+    *value = list->node.data[list->tail];
 
-    lst->free = lst->tail;
-    lst->tail = lst->prev[lst->tail];
+    int free = list->free;
 
-    lst->data[lst->free] = 0;
-    lst->next[lst->free] = FREE_TESTICLE;
-    lst->prev[lst->free] = FREE_TESTICLE;
+    list->free = list->tail;
+    list->tail = list->node.prev[list->tail];
 
-    lst->next[lst->tail] = 0;
-    lst->prev[0] = lst->tail;
+    list->node.data[list->free] = 0;
+    list->node.next[list->free] = free;
+    list->node.prev[list->free] = FREE_TESTICLE;
 
-    lst->size--;
+    list->node.next[list->tail] = 0;
+    list->node.prev[0] = list->tail;
 
-    if(lst->size == 0)
-        lst->head = 0;
+    list->size--;
 
-    return lst->free;
+    if(list->size == 0)
+        list->head = 0;
+
+    return list->free;
 }
 
-int list_insert_before(List * lst, const int index, const elem_t value)
+int list_insert_before(List * list, const int index, const elem_t value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
 
-    if(index == lst->head)
-        return push_front(lst, value);
+    if(index == list->head)
+        return push_front(list, value);
 
-    lst->data[lst->free] = value;
-    lst->next[lst->free] = index;
-    lst->prev[lst->free] = lst->prev[index];
+    list->node.data[list->free] = value;
+    list->node.next[list->free] = index;
+    list->node.prev[list->free] = list->node.prev[index];
 
-    lst->next[lst->prev[index]] = lst->free;
-    lst->prev[index] = lst->free;
+    list->node.next[list->node.prev[index]] = list->free;
+    list->node.prev[index] = list->free;
 
-    lst->free++;
-    lst->size++;
+    int free = list->free;
+    list->free = list->node.next[list->free];
+    list->size++;
 
-    return lst->free - 1;
+    return free;
 }
 
-int list_insert_after(List * lst, const int index, const elem_t value)
+int list_insert_after(List * list, const int index, const elem_t value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
 
-    if(index == lst->tail)
-        return push_back(lst, value);
+    if(index == list->tail)
+        return push_back(list, value);
 
-    lst->data[lst->free] = value;
-    lst->next[lst->free] = lst->next[index];
-    lst->prev[lst->free] = index;
+    list->node.data[list->free] = value;
+    list->node.next[list->free] = list->node.next[index];
+    list->node.prev[list->free] = index;
 
-    lst->prev[lst->next[index]] = lst->free;
-    lst->next[index] = lst->free;
+    list->node.prev[list->node.next[index]] = list->free;
+    list->node.next[index] = list->free;
 
-    lst->free++;
-    lst->size++;
+    int free = list->free;
+    list->free = list->node.next[list->free];
+    list->size++;
 
-    return lst->free - 1;
+    return free;
 }
 
-int list_delete(List * lst, const int index, elem_t * value)
+int list_delete(List * list, const int index, elem_t * value)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(index >= 0);
     assert(value != NULL);
 
-    if(index == lst->head)
-        return pop_front(lst, value);
-    else if(index == lst->tail)
-        return pop_back(lst, value);
+    if(index == list->head)
+        return pop_front(list, value);
+    else if(index == list->tail)
+        return pop_back(list, value);
 
-    *value = lst->data[index];
+    *value = list->node.data[index];
 
-    lst->free = index;
+    list->node.next[list->node.prev[index]] = list->node.next[index];
+    list->node.prev[list->node.next[index]] = list->node.prev[index];
 
-    lst->next[lst->prev[index]] = lst->next[index];
-    lst->prev[lst->next[index]] = lst->prev[index];
+    list->node.data[index] = 0;
+    list->node.next[index] = list->free;
+    list->node.prev[index] = FREE_TESTICLE;
 
-    lst->data[index] = 0;
-    lst->next[index] = FREE_TESTICLE;
-    lst->prev[index] = FREE_TESTICLE;
+    list->free = index;
+    list->size--;
 
-    lst->size--;
-
-    return lst->free;
+    return list->free;
 }
 
-int list_search(List * lst, const int index)
+int list_search(List * list, const int index)
 {
-    assert(lst != NULL);
+    assert(list != NULL);
     assert(index >= 0);
 
     int i = 0;
-    if(index <= lst->size / 2)
+    if(index <= list->size / 2)
     {
-        i = lst->next[0];
+        i = list->node.next[0];
         for(int j = 1; j != index; j++)
-            i = lst->next[i];
+            i = list->node.next[i];
     }
     else
     {
-        i = lst->prev[0];
-        for(int j = lst->size; j != index; j--)
-            i = lst->prev[i];
+        i = list->node.prev[0];
+        for(int j = list->size; j != index; j--)
+            i = list->node.prev[i];
     }
 
     return i;
 }
-
