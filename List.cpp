@@ -7,6 +7,19 @@
 const int INITIAL_CAPACITY = 5;
 const int POISON = -69;
 const int FREE_TESTICLE = -1;
+const int COEFF_INCREASE = 2;
+const int COEFF_DECREASE = 2;
+
+void fill_next_and_prev(List * list)
+{
+    assert(list != NULL);
+
+    for(int i = list->free; i < list->capacity; i++)
+        list->node[i].next= i + 1;
+
+    for(int i = list->free; i < list->capacity; i++)
+        list->node[i].prev = FREE_TESTICLE;
+}
 
 void list_ctor(List * list)
 {
@@ -18,24 +31,17 @@ void list_ctor(List * list)
     list->head = 0;
     list->tail = 0;
 
-    list->node.data = (elem_t *)calloc(list->capacity,3 * sizeof(elem_t));
+    list->node = (ListNode *)calloc(list->capacity, sizeof(ListNode));
 
-    if(list->node.data  == NULL)
+    if(list->node  == NULL)
     {
         printf("Pointer on data is NULL\n");
         abort();
     }
 
-    list->node.next = list->node.data + list->capacity;
-    list->node.prev = list->node.data + 2 * list->capacity;
+    list->node[0].data = POISON;
 
-    list->node.data[0] = POISON;
-
-    for(int i = 1; i < list->capacity; i++)
-        list->node.next[i] = i + 1;
-
-    for(int i = 1; i < list->capacity; i++)
-        list->node.prev[i] = FREE_TESTICLE;
+    fill_next_and_prev(list);
 }
 
 void list_dtor(List * list)
@@ -46,13 +52,30 @@ void list_dtor(List * list)
     list->head = 0;
     list->tail = 0;
 
-    free(list->node.data);
-    free(list->node.next);
-    free(list->node.prev);
+    free(list->node);
 
-    list->node.data = NULL;
-    list->node.next = NULL;
-    list->node.prev = NULL;
+    list->node = NULL;
+}
+
+void if_need_realloc(List * list)
+{
+    assert(list != NULL);
+
+    if(list->size + 1 == list->capacity)
+    {
+        list->capacity *= COEFF_INCREASE;
+        //else if(list->size *  == list->capacity)     -какое условие для уменьшения?
+
+        list->node = (ListNode *)realloc(list->node, list->capacity * sizeof(ListNode));
+
+        if(list->node  == NULL)
+        {
+            printf("Pointer on data is NULL\n");
+            abort();
+        }
+
+        fill_next_and_prev(list);
+    }
 }
 
 int push_front(List * list, const elem_t value)
@@ -60,14 +83,17 @@ int push_front(List * list, const elem_t value)
     assert(list != NULL);
 
     int free = list->free;
-    list->free = list->node.next[free];
 
-    list->node.data[free] = value;
-    list->node.next[free] = list->node.next[0];
-    list->node.prev[free] = 0;
+    if_need_realloc(list);
 
-    list->node.next[0] = free;
-    list->node.prev[list->head] = free;
+    list->free = list->node[free].next;
+
+    list->node[free].data = value;
+    list->node[free].next = list->node[0].next;
+    list->node[free].prev = 0;
+
+    list->node[0].next = free;
+    list->node[list->head].prev = free;
     list->head = free;
     list->size++;
 
@@ -82,14 +108,17 @@ int push_back(List * list, const elem_t value)
     assert(list != NULL);
 
     int free = list->free;
-    list->free = list->node.next[free];
 
-    list->node.data[free] = value;
-    list->node.next[free] = 0;
-    list->node.prev[free] = list->node.prev[0];
+    if_need_realloc(list);
 
-    list->node.next[list->tail] = free;
-    list->node.prev[0] = free;
+    list->free = list->node[free].next;
+
+    list->node[free].data = value;
+    list->node[free].next = 0;
+    list->node[free].prev = list->node[0].prev;
+
+    list->node[list->tail].next = free;
+    list->node[0].prev = free;
     list->tail = free;
     list->size++;
 
@@ -104,19 +133,19 @@ int pop_front(List * list, elem_t * value)
     assert(list != NULL);
     assert(value != NULL);
 
-    *value = list->node.data[list->head];
+    *value = list->node[list->head].data;
 
     int free = list->free;
 
     list->free = list->head;
-    list->head = list->node.next[list->head];
+    list->head = list->node[list->head].next;
 
-    list->node.data[list->free] = 0;
-    list->node.next[list->free] = free;
-    list->node.prev[list->free] = FREE_TESTICLE;
+    list->node[list->free].data = 0;
+    list->node[list->free].next = free;
+    list->node[list->free].prev = FREE_TESTICLE;
 
-    list->node.next[0] = list->head;
-    list->node.prev[list->head] = 0;
+    list->node[0].next = list->head;
+    list->node[list->head].prev = 0;
 
     list->size--;
 
@@ -131,19 +160,19 @@ int pop_back(List * list, elem_t * value)
     assert(list != NULL);
     assert(value != NULL);
 
-    *value = list->node.data[list->tail];
+    *value = list->node[list->tail].data;
 
     int free = list->free;
 
     list->free = list->tail;
-    list->tail = list->node.prev[list->tail];
+    list->tail = list->node[list->tail].prev;
 
-    list->node.data[list->free] = 0;
-    list->node.next[list->free] = free;
-    list->node.prev[list->free] = FREE_TESTICLE;
+    list->node[list->free].data = 0;
+    list->node[list->free].next = free;
+    list->node[list->free].prev = FREE_TESTICLE;
 
-    list->node.next[list->tail] = 0;
-    list->node.prev[0] = list->tail;
+    list->node[list->tail].next = 0;
+    list->node[0].prev = list->tail;
 
     list->size--;
 
@@ -158,18 +187,20 @@ int list_insert_before(List * list, const int index, const elem_t value)
     assert(list != NULL);
     assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
 
+    if_need_realloc(list);
+
     if(index == list->head)
         return push_front(list, value);
 
-    list->node.data[list->free] = value;
-    list->node.next[list->free] = index;
-    list->node.prev[list->free] = list->node.prev[index];
+    list->node[list->free].data = value;
+    list->node[list->free].next = index;
+    list->node[list->free].prev = list->node[index].prev;
 
-    list->node.next[list->node.prev[index]] = list->free;
-    list->node.prev[index] = list->free;
+    list->node[list->node[index].prev].next = list->free;
+    list->node[index].prev = list->free;
 
     int free = list->free;
-    list->free = list->node.next[list->free];
+    list->free = list->node[list->free].next;
     list->size++;
 
     return free;
@@ -180,18 +211,20 @@ int list_insert_after(List * list, const int index, const elem_t value)
     assert(list != NULL);
     assert(index >= 0);               //Как обрабатывать случай, когда index > size? - ошибка
 
+    if_need_realloc(list);
+
     if(index == list->tail)
         return push_back(list, value);
 
-    list->node.data[list->free] = value;
-    list->node.next[list->free] = list->node.next[index];
-    list->node.prev[list->free] = index;
+    list->node[list->free].data = value;
+    list->node[list->free].next = list->node[index].next;
+    list->node[list->free].prev = index;
 
-    list->node.prev[list->node.next[index]] = list->free;
-    list->node.next[index] = list->free;
+    list->node[list->node[index].next].prev = list->free;
+    list->node[index].next = list->free;
 
     int free = list->free;
-    list->free = list->node.next[list->free];
+    list->free = list->node[list->free].next;
     list->size++;
 
     return free;
@@ -208,14 +241,14 @@ int list_delete(List * list, const int index, elem_t * value)
     else if(index == list->tail)
         return pop_back(list, value);
 
-    *value = list->node.data[index];
+    *value = list->node[index].data;
 
-    list->node.next[list->node.prev[index]] = list->node.next[index];
-    list->node.prev[list->node.next[index]] = list->node.prev[index];
+    list->node[list->node[index].prev].next = list->node[index].next;
+    list->node[list->node[index].next].prev = list->node[index].prev;
 
-    list->node.data[index] = 0;
-    list->node.next[index] = list->free;
-    list->node.prev[index] = FREE_TESTICLE;
+    list->node[index].data = 0;
+    list->node[index].next = list->free;
+    list->node[index].prev = FREE_TESTICLE;
 
     list->free = index;
     list->size--;
@@ -231,15 +264,15 @@ int list_search(List * list, const int index)
     int i = 0;
     if(index <= list->size / 2)
     {
-        i = list->node.next[0];
+        i = list->node[0].next;
         for(int j = 1; j != index; j++)
-            i = list->node.next[i];
+            i = list->node[i].next;
     }
     else
     {
-        i = list->node.prev[0];
+        i = list->node[0].prev;
         for(int j = list->size; j != index; j--)
-            i = list->node.prev[i];
+            i = list->node[i].prev;
     }
 
     return i;

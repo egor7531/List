@@ -5,9 +5,9 @@ typedef int elem_t;
 
 struct ListNode
 {
-    elem_t * data;
-    int * next;
-    int * prev;
+    elem_t data;
+    int next;
+    int prev;
 };
 
 struct List
@@ -17,7 +17,7 @@ struct List
     int head;
     int tail;
     int free;
-    ListNode node;
+    ListNode * node;
 };
 
 void list_ctor(List * list);
