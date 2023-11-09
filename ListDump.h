@@ -3,6 +3,7 @@
 
 #include "List.h"
 
-void list_dump(List * lst);
+void list_dump(List * list);
+void list_graphic_dump(List * list);
 
 #endif //LISTDUMP_H_INCLUDED
