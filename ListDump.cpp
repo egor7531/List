@@ -61,8 +61,9 @@ void list_dump(List * list)
                 "<head = %d>\n"
                 "[tail = %d]\n"
                 "size = %d\n"
-                "capacity = %d\n",
-                list->free, list->head, list->tail, list->size,list->capacity);
+                "capacity = %d\n"
+                "errors = %d",
+                list->free, list->head, list->tail, list->size,list->capacity, list->errors);
 
     fclose(fp);
 }
@@ -86,21 +87,25 @@ void list_graphic_dump(List * list)
                 "{\n"
                 "rankdir = LR;\n"
                 "node [style = \"filled\", shape = \"record\", color = \"#000000\"];\n"
-                "size [fillcolor = \"#FF69B4\", label = \" size = %d \"];\n"
-                "capacity [fillcolor = \"#FF69B4\", label = \" capacity = %d \"];\n"
-                "free [fillcolor = \"#FF69B4\", label = \" free = %d \"];\n"
-                "head [fillcolor = \"#FF69B4\", label = \" head = %d \"];\n"
-                "tail [fillcolor = \"#FF69B4\", label = \" tail = %d \"];\n"
-                "node0 [fillcolor = \"#FF0000\" label = "
-                " \" index: 0 | data: %d | <next> next: %d | <prev> prev: %d \"];\n",
-                list->size, list->capacity, list->free, list->head, list->tail,
-                list->nodes[0].data, list->nodes[0].next, list->nodes[0].prev);
+                "info [fillcolor = \"#FF69B4\", label = "
+                " \" capacity = %d | size = %d | errors = %d \"];\n",
+                list->capacity, list->size, list->errors);
 
+    for(int i = 0; i < list->capacity - 1; i++)
+        fprintf(fp, "node%d -> ", i);
+    fprintf(fp, "node%d [style = \"invis\"];\n",list->capacity - 1);
+
+    fprintf(fp, "free [shape = \"rect\" fillcolor = \"#ADFF2F\"];\n"
+                "head [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
+                "tail [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
+                "node0 [fillcolor = \"#FF0000\", label = "
+                " \" index: 0 | data: %d | <next> next: %d | <prev> prev: %d \"];\n",
+                list->nodes[0].data, list->nodes[0].next, list->nodes[0].prev);
     for(int i = 1; i < list->capacity; i++)
     {
         fprintf(fp, "node%d ", i);
 
-        if(list->nodes[list->capacity - 1 - i].prev != FREE_TESTICLE)
+        if(list->nodes[i].prev != FREE_TESTICLE)
             fprintf(fp, "[fillcolor = \"#00FFFF\", ");
         else
             fprintf(fp, "[fillcolor = \"#ADFF2F\", ");
@@ -110,29 +115,23 @@ void list_graphic_dump(List * list)
                     i, list->nodes[i].data, list->nodes[i].next, list->nodes[i].prev);
     }
 
-    fprintf(fp, "edge [style = \"invis\"];\n");
-    for(int i = 0; i < list->capacity - 1; i++)
-        fprintf(fp, "node%d -> node%d;\n", i, i + 1);
-
-    fprintf(fp, "edge [style = \"solid\"];\n");
+    fprintf(fp, "edge [style = \"solid\", constraint = false];\n"
+                "free -> node%d [color = \"#000000\"];\n"
+                "head -> node%d [color = \"#000000\"];\n"
+                "tail -> node%d [color = \"#000000\"];\n",
+                list->free, list->head, list->tail);
     for(int i = 0; i < list->capacity; i++)
     {
-        if(list->nodes[list->capacity - 1 - i].prev != FREE_TESTICLE)
-            fprintf(fp, "node%d :<prev> -> node%d :<prev> [color = \"#FF0000\"];\n"
-                        "node%d :<next> -> node%d :<next> [color = \"#0000FF\"];\n",
-                        list->capacity - 1 - i, list->nodes[list->capacity - 1 - i].prev,
+        if(list->nodes[i].prev != FREE_TESTICLE)
+            fprintf(fp, //"node%d :<prev> -> node%d :<prev> [color = \"#FF0000\"];\n"
+                        "node%d -> node%d [color = \"#FF0000\"];\n",
+                        //list->nodes[i].prev, i,
                         i, list->nodes[i].next);
-        else
-            fprintf(fp, "node%d :<next> -> node%d :<next> [color = \"#FF00FF\"];\n",
-                list->capacity - 1 - i, list->nodes[list->capacity - 1 - i].next);
+        else if(list->nodes[i].next != list->capacity)
+            fprintf(fp, "node%d -> node%d [color = \"#00FF00\"];\n",
+                i, list->nodes[i].next);
     }
-
-    fprintf(fp, "edge [color = \"#000000\", constraint = false];\n"
-                "free -> node%d;\n"
-                "head -> node%d;\n"
-                "tail -> node%d;\n"
-                "}",
-                list->free, list->head, list->tail);
+    fprintf(fp, "}");
 
     fclose(fp);
 }

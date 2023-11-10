@@ -19,6 +19,7 @@ struct List
     int head;
     int tail;
     int free;
+    int errors;
     ListNodes * nodes;
 };
 
@@ -27,12 +28,16 @@ enum Errors
     NO_ERRORS               = 0 << 0,
     LIST_IS_NULL            = 1 << 0,
     CAPACITY_LESS_ONE       = 1 << 1,
-    SIZE_IS_NEGATIVE        = 1 << 2,
-    FREE_LESS_ONE           = 1 << 3,
-    SIZE_MORE_CAPACITY      = 1 << 4,
-    NODES_IS_NULL           = 1 << 5,
-    CHANGE_FINCTON          = 1 << 6,
-    INDEX_IS_FREE           = 1 << 7,
+    HEAD_LESS_ONE           = 1 << 2,
+    TAIL_LESS_ONE           = 1 << 3,
+    SIZE_IS_NEGATIVE        = 1 << 4,
+    FREE_LESS_ONE           = 1 << 5,
+    SIZE_MORE_CAPACITY      = 1 << 6,
+    NODES_IS_NULL           = 1 << 7,
+    CHANGE_FINCTON          = 1 << 8,
+    INDEX_LESS_ONE          = 1 << 9,
+    INDEX_IS_FREE           = 1 << 10,
+    VALUE_IS_NULL           = 1 << 11
 };
 
 void list_ctor(List * list, const int INITIAL_CAPACITY);
