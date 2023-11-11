@@ -16,8 +16,6 @@ struct List
 {
     int capacity;
     int size;
-    int head;
-    int tail;
     int free;
     int errors;
     ListNodes * nodes;

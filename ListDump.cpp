@@ -27,9 +27,9 @@ void list_dump(List * list)
     fprintf(fp, "\n" "%*s", width, "data");
     for(int i = 0; i < list->capacity; i++)
     {
-        if(i == list->head)
+        if(i == list->nodes[0].next)
             fprintf(fp, "%*d>", width, list->nodes[i].data);
-        else if(i == list->tail)
+        else if(i == list->nodes[0].prev)
             fprintf(fp, "%*d]", width, list->nodes[i].data);
         else
             fprintf(fp, "%*d", width, list->nodes[i].data);
@@ -38,9 +38,9 @@ void list_dump(List * list)
     fprintf(fp, "\n" "%*s", width, "next");
     for(int i = 0; i < list->capacity; i++)
     {
-        if(i == list->head)
+        if(i == list->nodes[0].next)
             fprintf(fp, "%*d>", width, list->nodes[i].next);
-        else if(i == list->tail)
+        else if(i == list->nodes[0].prev)
             fprintf(fp, "%*d]", width, list->nodes[i].next);
         else
             fprintf(fp, "%*d", width, list->nodes[i].next);
@@ -49,9 +49,9 @@ void list_dump(List * list)
     fprintf(fp, "\n" "%*s", width, "prev");
     for(int i = 0; i < list->capacity; i++)
     {
-        if(i == list->head)
+        if(i == list->nodes[0].next)
             fprintf(fp, "%*d>", width, list->nodes[i].prev);
-        else if(i == list->tail)
+        else if(i == list->nodes[0].prev)
             fprintf(fp, "%*d]", width, list->nodes[i].prev);
         else
             fprintf(fp, "%*d", width, list->nodes[i].prev);
@@ -63,7 +63,7 @@ void list_dump(List * list)
                 "size = %d\n"
                 "capacity = %d\n"
                 "errors = %d",
-                list->free, list->head, list->tail, list->size,list->capacity, list->errors);
+                list->free, list->nodes[0].next, list->nodes[0].prev, list->size,list->capacity, list->errors);
 
     fclose(fp);
 }
@@ -119,7 +119,7 @@ void list_graphic_dump(List * list)
                 "free -> node%d [color = \"#000000\"];\n"
                 "head -> node%d [color = \"#000000\"];\n"
                 "tail -> node%d [color = \"#000000\"];\n",
-                list->free, list->head, list->tail);
+                list->free, list->nodes[0].next, list->nodes[0].prev);
     for(int i = 0; i < list->capacity; i++)
     {
         if(list->nodes[i].prev != FREE_TESTICLE)

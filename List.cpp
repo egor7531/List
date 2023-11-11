@@ -28,13 +28,13 @@ int list_verificator(List * list)
 
     if(list == NULL)                                        return LIST_IS_NULL;
     if(list->capacity < 1)                                  err |= CAPACITY_LESS_ONE;
-    if(list->head < 1)                                      err |= HEAD_LESS_ONE;
-    if(list->tail < 1)                                      err |= TAIL_LESS_ONE;
     if(list->size < 0)                                      err |= SIZE_IS_NEGATIVE;
     if(list->free < 1)                                      err |= FREE_LESS_ONE;
     if(list->size >= list->capacity)                        err |= SIZE_MORE_CAPACITY;
     if(list->nodes == NULL)                                 return err |= NODES_IS_NULL;
     if(list->nodes[0].data != POISON)                       err |= CHANGE_FINCTON;
+    if(list->nodes[0].next < 1)                             err |= HEAD_LESS_ONE;
+    if(list->nodes[0].prev < 1)                             err |= TAIL_LESS_ONE;
 
     list->errors = err;
 }
@@ -58,8 +58,6 @@ void list_ctor(List * list, const int INITIAL_CAPACITY)
     list->capacity = INITIAL_CAPACITY;
     list->size = 0;
     list->free = 1;
-    list->head = 1;
-    list->tail = 1;
     list->errors = NO_ERRORS;
 
     list->nodes = (ListNodes *)calloc(INITIAL_CAPACITY, sizeof(ListNodes));
@@ -72,7 +70,8 @@ void list_ctor(List * list, const int INITIAL_CAPACITY)
     }
 
     list->nodes[0].data = POISON;
-
+    list->nodes[0].next = 0;
+    list->nodes[0].prev = 0;
     fill_nodes(list);
 }
 
@@ -81,8 +80,6 @@ void list_dtor(List * list)
     list->size = 0;
     list->capacity = 0;
     list->free = 0;
-    list->head = 0;
-    list->tail = 0;
 
     free(list->nodes);
 
@@ -130,13 +127,11 @@ int list_push_front(List * list, const elem_t value)
     list->nodes[free].next = list->nodes[0].next;
     list->nodes[free].prev = 0;
 
+    list->nodes[list->nodes[0].next].prev = free;
     list->nodes[0].next = free;
-    list->nodes[list->head].prev = free;
-    list->head = free;
-    list->tail = list->nodes[0].prev;
     list->size++;
 
-    return list->head;
+    return free;
 }
 
 int list_push_back(List * list, const elem_t value)
@@ -159,13 +154,11 @@ int list_push_back(List * list, const elem_t value)
     list->nodes[free].next = 0;
     list->nodes[free].prev = list->nodes[0].prev;
 
-    list->nodes[list->tail].next = free;
+    list->nodes[list->nodes[0].prev].next = free;
     list->nodes[0].prev = free;
-    list->tail = free;
-    list->head = list->nodes[0].next;
     list->size++;
 
-    return list->tail;
+    return free;
 }
 
 int list_pop_front(List * list, elem_t * value)
@@ -182,21 +175,17 @@ int list_pop_front(List * list, elem_t * value)
     }
     #endif
 
-    *value = list->nodes[list->head].data;
+    *value = list->nodes[list->nodes[0].next].data;
 
     int free = list->free;
-
-    list->free = list->head;
-    list->head = list->nodes[list->head].next;
+    list->free = list->nodes[0].next;
+    list->nodes[0].next = list->nodes[list->nodes[0].next].next;
 
     list->nodes[list->free].data = 0;
     list->nodes[list->free].next = free;
     list->nodes[list->free].prev = FREE_TESTICLE;
 
-    list->nodes[0].next = list->head;
-    list->nodes[list->head].prev = 0;
-
-    list->tail = list->nodes[0].prev;
+    list->nodes[list->nodes[0].next].prev = 0;
 
     list->size--;
 
@@ -217,21 +206,17 @@ int list_pop_back(List * list, elem_t * value)
     }
     #endif
 
-    *value = list->nodes[list->tail].data;
+    *value = list->nodes[list->nodes[0].prev].data;
 
     int free = list->free;
-
-    list->free = list->tail;
-    list->tail = list->nodes[list->tail].prev;
+    list->free = list->nodes[0].prev;
+    list->nodes[0].prev = list->nodes[list->nodes[0].prev].prev;
 
     list->nodes[list->free].data = 0;
     list->nodes[list->free].next = free;
     list->nodes[list->free].prev = FREE_TESTICLE;
 
-    list->nodes[list->tail].next = 0;
-    list->nodes[0].prev = list->tail;
-
-    list->head = list->nodes[0].next;
+    list->nodes[list->nodes[0].prev].next = 0;
 
     list->size--;
 
@@ -271,9 +256,6 @@ int list_insert_before(List * list, const int index, const elem_t value)
     list->nodes[list->nodes[index].prev].next = free;
     list->nodes[index].prev = free;
 
-    list->head = list->nodes[0].next;
-    list->tail = list->nodes[0].prev;
-
     list->size++;
 
     return free;
@@ -312,9 +294,6 @@ int list_insert_after(List * list, const int index, const elem_t value)
     list->nodes[list->nodes[index].next].prev = free;
     list->nodes[index].next = free;
 
-    list->head = list->nodes[0].next;
-    list->tail = list->nodes[0].prev;
-
     list->size++;
 
     return free;
@@ -342,9 +321,6 @@ int list_delete(List * list, const int index, elem_t * value)
     list->nodes[index].data = 0;
     list->nodes[index].next = list->free;
     list->nodes[index].prev = FREE_TESTICLE;
-
-    list->head = list->nodes[0].next;
-    list->tail = list->nodes[0].prev;
 
     list->free = index;
     list->size--;
