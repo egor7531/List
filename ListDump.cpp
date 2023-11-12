@@ -95,9 +95,7 @@ void list_graphic_dump(List * list)
         fprintf(fp, "node%d -> ", i);
     fprintf(fp, "node%d [style = \"invis\"];\n",list->capacity - 1);
 
-    fprintf(fp, "free [shape = \"rect\" fillcolor = \"#ADFF2F\"];\n"
-                "head [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
-                "tail [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
+    fprintf(fp, "{\n"
                 "node0 [fillcolor = \"#FF0000\", label = "
                 " \" index: 0 | data: %d | <next> next: %d | <prev> prev: %d \"];\n",
                 list->nodes[0].data, list->nodes[0].next, list->nodes[0].prev);
@@ -115,22 +113,28 @@ void list_graphic_dump(List * list)
                     i, list->nodes[i].data, list->nodes[i].next, list->nodes[i].prev);
     }
 
-    fprintf(fp, "edge [style = \"solid\", constraint = false];\n"
-                "free -> node%d [color = \"#000000\"];\n"
-                "head -> node%d [color = \"#000000\"];\n"
-                "tail -> node%d [color = \"#000000\"];\n",
-                list->free, list->nodes[0].next, list->nodes[0].prev);
+    fprintf(fp, "edge [style = \"solid\", constraint = false];\n");
     for(int i = 0; i < list->capacity; i++)
     {
         if(list->nodes[i].prev != FREE_TESTICLE)
             fprintf(fp, //"node%d :<prev> -> node%d :<prev> [color = \"#FF0000\"];\n"
-                        "node%d -> node%d [color = \"#FF0000\"];\n",
+                        "node%d -> node%d [color = \"#000000\"];\n",
                         //list->nodes[i].prev, i,
                         i, list->nodes[i].next);
         else if(list->nodes[i].next != list->capacity)
             fprintf(fp, "node%d -> node%d [color = \"#00FF00\"];\n",
                 i, list->nodes[i].next);
     }
+    fprintf(fp, "}");
+
+    fprintf(fp, "free [shape = \"rect\" fillcolor = \"#ADFF2F\"];\n"
+                "head [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
+                "tail [shape = \"rect\" fillcolor = \"#00FFFF\"];\n"
+                "{ rank = same; node%d; free; }\n"
+                "{ rank = same; node%d; head; }\n"
+                "{ rank = same; node%d; tail; };\n",
+                list->free, list->nodes[0].next, list->nodes[0].prev);
+
     fprintf(fp, "}");
 
     fclose(fp);

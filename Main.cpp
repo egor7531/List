@@ -82,26 +82,14 @@ int main()
 
     int x = 0;
     list_push_front(&list, 10);
-    list_dump(&list);
-    getchar();
     list_push_back(&list, 30);
-    list_dump(&list);
-    getchar();
-    for(int i = 1; i < 2; i++)
-    {
+    for(int i = 1; i < 6; i++)
         list_insert_after(&list, i, 50);
-        list_dump(&list);
-        getchar();
-    }
-    list_pop_front(&list, &x);
+
+    list_push_front(&list, 1);
+    list_pop_back(&list, &x);
+
     list_dump(&list);
-    getchar();
-    list_pop_front(&list, &x);
-    list_dump(&list);
-    getchar();
-    list_pop_front(&list, &x);
-    list_dump(&list);
-    getchar();
     list_graphic_dump(&list);
     list_dtor(&list);
 
