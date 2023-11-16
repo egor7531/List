@@ -4,7 +4,48 @@
 
 #include "ListDump.h"
 
-void list_dump(List * list)
+void print_errors(FILE *fp, const int err)
+{
+    assert(fp != nullptr);
+    assert(err >= 0);
+
+    if(err == NO_ERRORS)
+        fprintf(fp, "No errors");
+
+    for(int i = 1; i < err; i *= 2)
+    {
+        switch(err & i)
+        {
+            case LIST_IS_NULL: fprintf(fp, "Pointer on List is null");
+                break;
+            case CAPACITY_LESS_ONE: fprintf(fp, "Pointer on List is null");
+                break;
+            case HEAD_IS_NEGATIVE: fprintf(fp, "Head of list is negative");
+                break;
+            case TAIL_IS_NEGATIVE: fprintf(fp, "Tail of list is negative");
+                break;
+            case SIZE_IS_NEGATIVE: fprintf(fp, "Size of list is negative");
+                break;
+            case FREE_LESS_ONE: fprintf(fp, "Index of free element less 1");
+                break;
+            case SIZE_MORE_CAPACITY: fprintf(fp, "Size more capacity");
+                break;
+            case NODES_IS_NULL: fprintf(fp, "Pointer on struct of nodes is null");
+                break;
+            case CHANGE_FINCTON: fprintf(fp, "Value of finction elemt change");
+                break;
+            case INDEX_LESS_ONE: fprintf(fp, "Pointer on element of list less 1");
+                break;
+            case INDEX_IS_FREE: fprintf(fp, "Pointer on element of list indicate on free element");
+                break;
+            case VALUE_IS_NULL: fprintf(fp, "Pointer on value of argument is null");
+                break;
+            default:
+                break;
+        }
+    }
+}
+void list_dump(const List * list)
 {
     assert(list != NULL);
 
@@ -61,14 +102,15 @@ void list_dump(List * list)
                 "<head = %d>\n"
                 "[tail = %d]\n"
                 "size = %d\n"
-                "capacity = %d\n"
-                "errors = %d",
-                list->free, list->nodes[0].next, list->nodes[0].prev, list->size,list->capacity, list->errors);
+                "capacity = %d\n",
+                list->free, list->nodes[0].next, list->nodes[0].prev, list->size,list->capacity);
+    fprintf(fp, "status error: ");
+    print_errors(fp, list->errors);
 
     fclose(fp);
 }
 
-void list_graphic_dump(List * list)
+void list_graphic_dump(const List * list)
 {
     assert(list != NULL);
     assert(list->nodes != NULL);
@@ -88,8 +130,10 @@ void list_graphic_dump(List * list)
                 "rankdir = LR;\n"
                 "node [style = \"filled\", shape = \"record\", color = \"#000000\"];\n"
                 "info [fillcolor = \"#FF69B4\", label = "
-                " \" capacity = %d | size = %d | errors = %d \"];\n",
-                list->capacity, list->size, list->errors);
+                " \" capacity = %d | size = %d | status errors = ",
+                list->capacity, list->size);
+    print_errors(fp, list->errors);
+    fprintf(fp, " \"];\n");
 
     for(int i = 0; i < list->capacity - 1; i++)
         fprintf(fp, "node%d -> ", i);

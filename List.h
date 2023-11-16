@@ -1,11 +1,13 @@
 #ifndef LIST_H_INCLUDED
 #define LIST_H_INCLUDED
 
+//#define LIST_PROTECTION
+
 const int FREE_TESTICLE = -1;
 
 typedef int elem_t;
 
-struct ListNodes
+struct ListNode
 {
     elem_t data;
     int next;
@@ -18,7 +20,7 @@ struct List
     int size;
     int free;
     int errors;
-    ListNodes * nodes;
+    ListNode * nodes;
 };
 
 enum Errors
@@ -26,8 +28,8 @@ enum Errors
     NO_ERRORS               = 0 << 0,
     LIST_IS_NULL            = 1 << 0,
     CAPACITY_LESS_ONE       = 1 << 1,
-    HEAD_LESS_ONE           = 1 << 2,
-    TAIL_LESS_ONE           = 1 << 3,
+    HEAD_IS_NEGATIVE        = 1 << 2,
+    TAIL_IS_NEGATIVE        = 1 << 3,
     SIZE_IS_NEGATIVE        = 1 << 4,
     FREE_LESS_ONE           = 1 << 5,
     SIZE_MORE_CAPACITY      = 1 << 6,

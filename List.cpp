@@ -5,8 +5,6 @@
 #include "List.h"
 #include "ListDump.h"
 
-//#define PROTECTION
-
 /*#define DEF_CHECK_LIST
     #ifdef PROTECTION                   \
     list_verificator(list);             \
@@ -24,19 +22,21 @@ const int COEFF_DECREASE = 2;
 
 int list_verificator(List * list)
 {
-    int err = list->errors;
+    int err = NO_ERRORS;
 
-    if(list == NULL)                                        return LIST_IS_NULL;
-    if(list->capacity < 1)                                  err |= CAPACITY_LESS_ONE;
-    if(list->size < 0)                                      err |= SIZE_IS_NEGATIVE;
-    if(list->free < 1)                                      err |= FREE_LESS_ONE;
-    if(list->size >= list->capacity)                        err |= SIZE_MORE_CAPACITY;
-    if(list->nodes == NULL)                                 return err |= NODES_IS_NULL;
-    if(list->nodes[0].data != POISON)                       err |= CHANGE_FINCTON;
-    if(list->nodes[0].next < 1)                             err |= HEAD_LESS_ONE;
-    if(list->nodes[0].prev < 1)                             err |= TAIL_LESS_ONE;
+    if(list == NULL)                       return LIST_IS_NULL;
+    if(list->capacity < 1)                 err |= CAPACITY_LESS_ONE;
+    if(list->size < 0)                     err |= SIZE_IS_NEGATIVE;
+    if(list->free < 1)                     err |= FREE_LESS_ONE;
+    if(list->size >= list->capacity)       err |= SIZE_MORE_CAPACITY;
+    if(list->nodes == NULL)                return err |= NODES_IS_NULL;
+    if(list->nodes[0].data != POISON)      err |= CHANGE_FINCTON;
+    if(list->nodes[0].next < 0)            err |= HEAD_IS_NEGATIVE;
+    if(list->nodes[0].prev < 0)            err |= TAIL_IS_NEGATIVE;
 
-    list->errors = err;
+    list->errors |= err;
+
+    return list->errors;
 }
 
 void fill_nodes(List * list)
@@ -60,7 +60,7 @@ void list_ctor(List * list, const int INITIAL_CAPACITY)
     list->free = 1;
     list->errors = NO_ERRORS;
 
-    list->nodes = (ListNodes *)calloc(INITIAL_CAPACITY, sizeof(ListNodes));
+    list->nodes = (ListNode *)calloc(INITIAL_CAPACITY, sizeof(ListNode));
 
     if(list->nodes  == NULL)
     {
@@ -93,8 +93,7 @@ void list_realloc_if_need(List * list)
     if(list->size + 1 == list->capacity)
     {
         list->capacity *= COEFF_INCREASE;
-
-        list->nodes = (ListNodes *)realloc(list->nodes, list->capacity * sizeof(ListNodes));
+        list->nodes = (ListNode *)realloc(list->nodes, list->capacity * sizeof(ListNode));
 
         if(list->nodes  == NULL)
         {
@@ -109,7 +108,7 @@ void list_realloc_if_need(List * list)
 
 int list_push_front(List * list, const elem_t value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(list->errors > 0)
     {
@@ -136,7 +135,7 @@ int list_push_front(List * list, const elem_t value)
 
 int list_push_back(List * list, const elem_t value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(list->errors > 0)
     {
@@ -163,7 +162,7 @@ int list_push_back(List * list, const elem_t value)
 
 int list_pop_front(List * list, elem_t * value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(value == NULL)
         list->errors = VALUE_IS_NULL;
@@ -194,7 +193,7 @@ int list_pop_front(List * list, elem_t * value)
 
 int list_pop_back(List * list, elem_t * value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(value == NULL)
         list->errors = VALUE_IS_NULL;
@@ -225,7 +224,7 @@ int list_pop_back(List * list, elem_t * value)
 
 int list_insert_before(List * list, const int index, const elem_t value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(index < 1)
         list->errors = INDEX_LESS_ONE;
@@ -263,7 +262,7 @@ int list_insert_before(List * list, const int index, const elem_t value)
 
 int list_insert_after(List * list, const int index, const elem_t value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(index < 1)
         list->errors = INDEX_LESS_ONE;
@@ -301,7 +300,7 @@ int list_insert_after(List * list, const int index, const elem_t value)
 
 int list_delete(List * list, const int index, elem_t * value)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(value == NULL)
         list->errors = VALUE_IS_NULL;
@@ -330,7 +329,7 @@ int list_delete(List * list, const int index, elem_t * value)
 
 int list_search(List * list, const int index)
 {
-    #ifdef PROTECTION
+    #ifdef LIST_PROTECTION
     list_verificator(list);
     if(index < 1)
         list->errors = INDEX_LESS_ONE;
