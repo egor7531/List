@@ -12,7 +12,7 @@ void print_errors(FILE *fp, const int err)
     if(err == NO_ERRORS)
         fprintf(fp, "No errors");
 
-    for(int i = 1; i < err; i *= 2)
+    for(int i = 1; i < err; i <<= 1)
     {
         switch(err & i)
         {
@@ -34,13 +34,14 @@ void print_errors(FILE *fp, const int err)
                 break;
             case CHANGE_FINCTON: fprintf(fp, "Value of finction elemt change");
                 break;
-            case INDEX_LESS_ONE: fprintf(fp, "Pointer on element of list less 1");
+            case INDEX_LESS_ZERO: fprintf(fp, "Pointer on element of list less 1");
                 break;
             case INDEX_IS_FREE: fprintf(fp, "Pointer on element of list indicate on free element");
                 break;
             case VALUE_IS_NULL: fprintf(fp, "Pointer on value of argument is null");
                 break;
             default:
+                //assert( !"[print_errors]: Unknown flag");
                 break;
         }
     }
@@ -48,6 +49,7 @@ void print_errors(FILE *fp, const int err)
 void list_dump(const List * list)
 {
     assert(list != NULL);
+    assert(list->nodes != NULL);
 
     const char * fileName = "Dump.txt";
     FILE * fp = fopen(fileName, "wb");
@@ -125,7 +127,7 @@ void list_graphic_dump(const List * list)
         abort();
     }
 
-    fprintf(fp, "digraph G\n"
+    fprintf(fp, "digraph List\n"
                 "{\n"
                 "rankdir = LR;\n"
                 "node [style = \"filled\", shape = \"record\", color = \"#000000\"];\n"

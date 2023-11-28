@@ -5,39 +5,9 @@
 #include "List.h"
 #include "ListDump.h"
 
-/*#define DEF_CHECK_LIST
-    #ifdef PROTECTION                   \
-    list_verificator(list);             \
-    if(list->errors > 0)                \
-    {                                   \
-        list_dump(list);                \
-        abort();                        \
-    }                                   \
-    #endif
-*/
-
 const int POISON = -69;
 const int COEFF_INCREASE = 2;
 const int COEFF_DECREASE = 2;
-
-int list_verificator(List * list)
-{
-    int err = NO_ERRORS;
-
-    if(list == NULL)                       return LIST_IS_NULL;
-    if(list->capacity < 1)                 err |= CAPACITY_LESS_ONE;
-    if(list->size < 0)                     err |= SIZE_IS_NEGATIVE;
-    if(list->free < 1)                     err |= FREE_LESS_ONE;
-    if(list->size >= list->capacity)       err |= SIZE_MORE_CAPACITY;
-    if(list->nodes == NULL)                return err |= NODES_IS_NULL;
-    if(list->nodes[0].data != POISON)      err |= CHANGE_FINCTON;
-    if(list->nodes[0].next < 0)            err |= HEAD_IS_NEGATIVE;
-    if(list->nodes[0].prev < 0)            err |= TAIL_IS_NEGATIVE;
-
-    list->errors |= err;
-
-    return list->errors;
-}
 
 void fill_nodes(List * list)
 {
@@ -51,28 +21,52 @@ void fill_nodes(List * list)
     }
 }
 
-void list_ctor(List * list, const int INITIAL_CAPACITY)
+void list_realloc(List * list)
 {
-    assert(list != NULL);
-
-    list->capacity = INITIAL_CAPACITY;
-    list->size = 0;
-    list->free = 1;
-    list->errors = NO_ERRORS;
-
-    list->nodes = (ListNode *)calloc(INITIAL_CAPACITY, sizeof(ListNode));
+    list->nodes = (ListNode *)realloc(list->nodes, list->capacity * sizeof(ListNode));
 
     if(list->nodes  == NULL)
     {
         list->errors = NODES_IS_NULL;
         list_dump(list);
-        abort();
+        return list_dtor(list);
     }
 
-    list->nodes[0].data = POISON;
-    list->nodes[0].next = 0;
-    list->nodes[0].prev = 0;
     fill_nodes(list);
+}
+
+int list_verificator(List * list)
+{
+    int err = NO_ERRORS;
+
+    if(list == NULL)                       return LIST_IS_NULL;
+    if(list->capacity < 1)                 err |= CAPACITY_LESS_ONE;
+    if(list->size < 0)                     err |= SIZE_IS_NEGATIVE;
+    if(list->size >= list->capacity)       err |= SIZE_MORE_CAPACITY;
+    if(list->nodes == NULL)                return list->errors = err | NODES_IS_NULL;
+    if(list->nodes[0].data != POISON)      err |= CHANGE_FINCTON;
+    if(list->nodes[0].next < 0)            err |= HEAD_IS_NEGATIVE;
+    if(list->nodes[0].prev < 0)            err |= TAIL_IS_NEGATIVE;
+
+    list->errors |= err;
+
+    return list->errors;
+}
+
+List list_ctor(const int initial_capacity)
+{
+    List list = {};
+    list.capacity = initial_capacity;
+    list.size = 0;
+    list.free = 1;
+    list.errors = NO_ERRORS;
+
+    list_realloc(&list);
+    list.nodes[0].data = POISON;
+    list.nodes[0].next = 0;
+    list.nodes[0].prev = 0;
+
+    return list;
 }
 
 void list_dtor(List * list)
@@ -86,164 +80,51 @@ void list_dtor(List * list)
     list->nodes = NULL;
 }
 
-void list_realloc_if_need(List * list)
-{
-    assert(list != NULL);
-
-    if(list->size + 1 == list->capacity)
-    {
-        list->capacity *= COEFF_INCREASE;
-        list->nodes = (ListNode *)realloc(list->nodes, list->capacity * sizeof(ListNode));
-
-        if(list->nodes  == NULL)
-        {
-            list->errors = NODES_IS_NULL;
-            list_dump(list);
-            abort();
-        }
-
-        fill_nodes(list);
-    }
-}
-
 int list_push_front(List * list, const elem_t value)
 {
-    #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-    #endif
-
-    list_realloc_if_need(list);
-
-    int free = list->free;
-    list->free = list->nodes[free].next;
-
-    list->nodes[free].data = value;
-    list->nodes[free].next = list->nodes[0].next;
-    list->nodes[free].prev = 0;
-
-    list->nodes[list->nodes[0].next].prev = free;
-    list->nodes[0].next = free;
-    list->size++;
-
-    return free;
+    return list_insert_before(list, list->nodes[0].next, value);
 }
 
 int list_push_back(List * list, const elem_t value)
 {
-    #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-    #endif
-
-    list_realloc_if_need(list);
-
-    int free = list->free;
-    list->free = list->nodes[free].next;
-
-    list->nodes[free].data = value;
-    list->nodes[free].next = 0;
-    list->nodes[free].prev = list->nodes[0].prev;
-
-    list->nodes[list->nodes[0].prev].next = free;
-    list->nodes[0].prev = free;
-    list->size++;
-
-    return free;
+    return list_insert_after(list, list->nodes[0].prev, value);
 }
 
 int list_pop_front(List * list, elem_t * value)
 {
-    #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(value == NULL)
-        list->errors = VALUE_IS_NULL;
-
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-    #endif
-
-    *value = list->nodes[list->nodes[0].next].data;
-
-    int free = list->free;
-    list->free = list->nodes[0].next;
-    list->nodes[0].next = list->nodes[list->nodes[0].next].next;
-
-    list->nodes[list->free].data = 0;
-    list->nodes[list->free].next = free;
-    list->nodes[list->free].prev = FREE_TESTICLE;
-
-    list->nodes[list->nodes[0].next].prev = 0;
-
-    list->size--;
-
-    return list->free;
+    return list_delete(list, list->nodes[0].next, value);
 }
 
 int list_pop_back(List * list, elem_t * value)
 {
-    #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(value == NULL)
-        list->errors = VALUE_IS_NULL;
-
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-    #endif
-
-    *value = list->nodes[list->nodes[0].prev].data;
-
-    int free = list->free;
-    list->free = list->nodes[0].prev;
-    list->nodes[0].prev = list->nodes[list->nodes[0].prev].prev;
-
-    list->nodes[list->free].data = 0;
-    list->nodes[list->free].next = free;
-    list->nodes[list->free].prev = FREE_TESTICLE;
-
-    list->nodes[list->nodes[0].prev].next = 0;
-
-    list->size--;
-
-    return list->free;
+    return list_delete(list, list->nodes[0].prev, value);
 }
 
 int list_insert_before(List * list, const int index, const elem_t value)
 {
     #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(index < 1)
-        list->errors = INDEX_LESS_ONE;
-
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-
+    int err = list_verificator(list);
+    if(index < 0)
+        err |= INDEX_LESS_ZERO;
     if(list->nodes[index].prev == FREE_TESTICLE)
+        err |= INDEX_IS_FREE;
+
+    if(list == NULL)
+        list->errors = err;
+
+    if(err > 0)
     {
-        list->errors = INDEX_IS_FREE;
         list_dump(list);
-        abort();
+        list_dtor(list);
+        return err;
     }
     #endif
 
-    list_realloc_if_need(list);
+    if(list->size + 1 == list->capacity)
+    {
+        list->capacity *= COEFF_INCREASE;
+        list_realloc(list);
+    }
 
     int free = list->free;
     list->free = list->nodes[free].next;
@@ -263,25 +144,28 @@ int list_insert_before(List * list, const int index, const elem_t value)
 int list_insert_after(List * list, const int index, const elem_t value)
 {
     #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(index < 1)
-        list->errors = INDEX_LESS_ONE;
-
-    if(list->errors > 0)
-    {
-        list_dump(list);
-        abort();
-    }
-
+    int err = list_verificator(list);
+    if(index < 0)
+        err |= INDEX_LESS_ZERO;
     if(list->nodes[index].prev == FREE_TESTICLE)
+        err |= INDEX_IS_FREE;
+
+    if(list == NULL)
+        list->errors = err;
+
+    if(err > 0)
     {
-        list->errors = INDEX_IS_FREE;
         list_dump(list);
-        abort();
+        list_dtor(list);
+        return err;
     }
     #endif
 
-    list_realloc_if_need(list);
+    if(list->size + 1 == list->capacity)
+    {
+        list->capacity *= COEFF_INCREASE;
+        list_realloc(list);
+    }
 
     int free = list->free;
     list->free = list->nodes[free].next;
@@ -301,14 +185,18 @@ int list_insert_after(List * list, const int index, const elem_t value)
 int list_delete(List * list, const int index, elem_t * value)
 {
     #ifdef LIST_PROTECTION
-    list_verificator(list);
+    int err = list_verificator(list);
     if(value == NULL)
-        list->errors = VALUE_IS_NULL;
+        err |= VALUE_IS_NULL;
 
-    if(list->errors > 0)
+    if(list == NULL)
+        list->errors = err;
+
+    if(err > 0)
     {
         list_dump(list);
-        abort();
+        list_dtor(list);
+        return err;
     }
     #endif
 
@@ -327,33 +215,37 @@ int list_delete(List * list, const int index, elem_t * value)
     return index;
 }
 
-int list_search(List * list, const int index)
+int list_search(List * list, const int logilacIndex)
 {
     #ifdef LIST_PROTECTION
-    list_verificator(list);
-    if(index < 1)
-        list->errors = INDEX_LESS_ONE;
+    int err = list_verificator(list);
+    if(logilacIndex < 0)
+        err |= INDEX_LESS_ZERO;
 
-    if(list->errors > 0)
+    if(list == NULL)
+        list->errors = err;
+
+    if(err > 0)
     {
         list_dump(list);
-        abort();
+        list_dtor(list);
+        return err;
     }
     #endif
 
-    int i = 0;
-    if(index <= list->size / 2)
+    int fisicalIndex = 0;
+    if(logilacIndex <= list->size / 2)
     {
-        i = list->nodes[0].next;
-        for(int j = 1; j != index; j++)
-            i = list->nodes[i].next;
+        fisicalIndex = list->nodes[0].next;
+        for(int j = 1; j != logilacIndex; j++)
+            fisicalIndex = list->nodes[fisicalIndex].next;
     }
     else
     {
-        i = list->nodes[0].prev;
-        for(int j = list->size; j != index; j--)
-            i = list->nodes[i].prev;
+        fisicalIndex = list->nodes[0].prev;
+        for(int j = list->size; j != logilacIndex; j--)
+            fisicalIndex = list->nodes[fisicalIndex].prev;
     }
 
-    return i;
+    return fisicalIndex;
 }

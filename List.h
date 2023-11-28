@@ -1,7 +1,7 @@
 #ifndef LIST_H_INCLUDED
 #define LIST_H_INCLUDED
 
-//#define LIST_PROTECTION
+#define LIST_PROTECTION
 
 const int FREE_TESTICLE = -1;
 
@@ -35,12 +35,12 @@ enum Errors
     SIZE_MORE_CAPACITY      = 1 << 6,
     NODES_IS_NULL           = 1 << 7,
     CHANGE_FINCTON          = 1 << 8,
-    INDEX_LESS_ONE          = 1 << 9,
+    INDEX_LESS_ZERO         = 1 << 9,
     INDEX_IS_FREE           = 1 << 10,
     VALUE_IS_NULL           = 1 << 11
 };
 
-void list_ctor(List * list, const int INITIAL_CAPACITY);
+List list_ctor(const int initial_capacity);
 void list_dtor(List * list);
 
 int list_push_front(List * list, const elem_t value);
@@ -51,6 +51,6 @@ int list_pop_back(List * list, elem_t * value);
 int list_insert_after(List * list, const int index, const elem_t value);
 int list_insert_before(List * list, const int index, const elem_t value);
 int list_delete(List * list, const int index, elem_t * value);
-int list_search(List * list, const int index);
+int list_search(List * list, const int logilacIndex);
 
 #endif //LIST_H_INCLUDED
