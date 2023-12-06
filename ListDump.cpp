@@ -1,65 +1,73 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 #include "ListDump.h"
 
-void print_errors(FILE *fp, const int err)
+void print_errors(FILE* fp, const int err)
 {
     assert(fp != nullptr);
     assert(err >= 0);
 
     if(err == NO_ERRORS)
         fprintf(fp, "No errors");
-
-    for(int i = 1; i < err; i <<= 1)
-    {
-        switch(err & i)
-        {
-            case LIST_IS_NULL: fprintf(fp, "Pointer on List is null");
-                break;
-            case CAPACITY_LESS_ONE: fprintf(fp, "Pointer on List is null");
-                break;
-            case HEAD_IS_NEGATIVE: fprintf(fp, "Head of list is negative");
-                break;
-            case TAIL_IS_NEGATIVE: fprintf(fp, "Tail of list is negative");
-                break;
-            case SIZE_IS_NEGATIVE: fprintf(fp, "Size of list is negative");
-                break;
-            case FREE_LESS_ONE: fprintf(fp, "Index of free element less 1");
-                break;
-            case SIZE_MORE_CAPACITY: fprintf(fp, "Size more capacity");
-                break;
-            case NODES_IS_NULL: fprintf(fp, "Pointer on struct of nodes is null");
-                break;
-            case CHANGE_FINCTON: fprintf(fp, "Value of finction elemt change");
-                break;
-            case INDEX_LESS_ZERO: fprintf(fp, "Pointer on element of list less 1");
-                break;
-            case INDEX_IS_FREE: fprintf(fp, "Pointer on element of list indicate on free element");
-                break;
-            case VALUE_IS_NULL: fprintf(fp, "Pointer on value of argument is null");
-                break;
-            default:
-                //assert( !"[print_errors]: Unknown flag");
-                break;
-        }
-    }
+    if(err & LIST_IS_NULL)
+        fprintf(fp, "Pointer on List is null");
+    if(err & CAPACITY_LESS_ONE)
+        fprintf(fp, "Pointer on List is null");
+    if(err & HEAD_IS_NEGATIVE)
+        fprintf(fp, "Head of list is negative");
+    if(err & TAIL_IS_NEGATIVE)
+        fprintf(fp, "Tail of list is negative");
+    if(err & SIZE_IS_NEGATIVE)
+        fprintf(fp, "Size of list is negative");
+    if(err & FREE_LESS_ONE)
+        fprintf(fp, "Index of free element less 1");
+    if(err & SIZE_MORE_CAPACITY)
+        fprintf(fp, "Size more capacity");
+    if(err & NODES_IS_NULL)
+        fprintf(fp, "Pointer on struct of nodes is null");
+    if(err & CHANGE_FINCTON)
+        fprintf(fp, "Value of finction elemt change");
+    if(err & INDEX_LESS_ZERO)
+        fprintf(fp, "Pointer on element of list less 1");
+    if(err & INDEX_IS_FREE)
+        fprintf(fp, "Pointer on element of list indicate on free element");
+    if(err & VALUE_IS_NULL)
+        fprintf(fp, "Pointer on value of argument is null");
+    if(err & FP_IS_NULL)
+        fprintf(fp, "Pointer on file if NULL");
+    if(err & ERROR_WORK_SYSTEM)
+        fprintf(fp, "Erroneous operation of the systems funcion");
 }
-void list_dump(const List * list)
+
+void list_dump(List* list)
 {
     assert(list != NULL);
-    assert(list->nodes != NULL);
 
-    const char * fileName = "Dump.txt";
-    FILE * fp = fopen(fileName, "wb");
+    if(list->nodes == NULL)
+    {
+        list->errors |= NODES_IS_NULL;
+        return;
+    }
 
+    const char* fileName = "Dump.txt";
+    FILE* fp = fopen(fileName, "wb");
     if(fp == NULL)
     {
-        printf("Pointer on %s is NULL\n", fileName);
+        list->errors |= FP_IS_NULL;
         fclose(fp);
-        abort();
+        return;
     }
+
+    fprintf(fp, "free = %d\n"
+                "<head = %d>\n"
+                "[tail = %d]\n"
+                "size = %d\n"
+                "capacity = %d\n",
+                list->free, list->nodes[0].next, list->nodes[0].prev, list->size,list->capacity);
+    fprintf(fp, "status error: ");
+    print_errors(fp, list->errors);
 
     int width = 5;
 
@@ -100,31 +108,43 @@ void list_dump(const List * list)
             fprintf(fp, "%*d", width, list->nodes[i].prev);
     }
 
-    fprintf(fp, "\n" "free = %d\n"
-                "<head = %d>\n"
-                "[tail = %d]\n"
-                "size = %d\n"
-                "capacity = %d\n",
-                list->free, list->nodes[0].next, list->nodes[0].prev, list->size,list->capacity);
-    fprintf(fp, "status error: ");
-    print_errors(fp, list->errors);
-
     fclose(fp);
 }
 
-void list_graphic_dump(const List * list)
+void list_system(List* list, const char* nameFilePng, const char* nameFileDot)
 {
     assert(list != NULL);
-    assert(list->nodes != NULL);
 
-    const char * nameFile = "Dump.dot";
-    FILE * fp = fopen(nameFile, "wb");
+    const int MAX_SIZE_COMMAND = 100;
+    char command[MAX_SIZE_COMMAND] = "dot ";
+    strncat(command, nameFileDot, MAX_SIZE_COMMAND);
+    strncat(command, " -T png -o ", MAX_SIZE_COMMAND);
+    strncat(command, nameFilePng, MAX_SIZE_COMMAND);
 
+    if(system(command) > 0)
+    {
+        list->errors |= ERROR_WORK_SYSTEM;
+        return;
+    }
+}
+
+void list_graphic_dump(List* list, const char* nameFilePng)
+{
+    assert(list != NULL);
+
+    if(list->nodes == NULL)
+    {
+        list->errors |= NODES_IS_NULL;
+        return;
+    }
+
+    const char* nameFileDot = "Dump.dot";
+    FILE* fp = fopen(nameFileDot, "wb");
     if(fp == NULL)
     {
-        printf("Can't open file: %s\n", nameFile);
+        list->errors |= FP_IS_NULL;
         fclose(fp);
-        abort();
+        return;
     }
 
     fprintf(fp, "digraph List\n"
@@ -182,6 +202,6 @@ void list_graphic_dump(const List * list)
                 list->free, list->nodes[0].next, list->nodes[0].prev);
 
     fprintf(fp, "}");
-
     fclose(fp);
+    list_system(list, nameFilePng, nameFileDot);
 }

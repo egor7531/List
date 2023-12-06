@@ -9,7 +9,7 @@ const int POISON = -69;
 const int COEFF_INCREASE = 2;
 const int COEFF_DECREASE = 2;
 
-void fill_nodes(List * list)
+void fill_nodes(List* list)
 {
     assert(list != NULL);
 
@@ -21,21 +21,23 @@ void fill_nodes(List * list)
     }
 }
 
-void list_realloc(List * list)
+void list_realloc(List* list, const int capacity)
 {
-    list->nodes = (ListNode *)realloc(list->nodes, list->capacity * sizeof(ListNode));
+    assert(list != NULL);
 
-    if(list->nodes  == NULL)
+    list->capacity = capacity;
+    list->nodes = (ListNode*)realloc(list->nodes, capacity * sizeof(ListNode));
+    if(list->nodes == NULL)
     {
         list->errors = NODES_IS_NULL;
         list_dump(list);
-        return list_dtor(list);
+        return;
     }
 
     fill_nodes(list);
 }
 
-int list_verificator(List * list)
+int list_verificator(List* list)
 {
     int err = NO_ERRORS;
 
@@ -49,19 +51,20 @@ int list_verificator(List * list)
     if(list->nodes[0].prev < 0)            err |= TAIL_IS_NEGATIVE;
 
     list->errors |= err;
-
     return list->errors;
 }
 
 List list_ctor(const int initial_capacity)
 {
+    assert(initial_capacity > 0);
+
     List list = {};
     list.capacity = initial_capacity;
     list.size = 0;
     list.free = 1;
     list.errors = NO_ERRORS;
 
-    list_realloc(&list);
+    list_realloc(&list, initial_capacity);
     list.nodes[0].data = POISON;
     list.nodes[0].next = 0;
     list.nodes[0].prev = 0;
@@ -69,38 +72,36 @@ List list_ctor(const int initial_capacity)
     return list;
 }
 
-void list_dtor(List * list)
+void list_dtor(List* list)
 {
-    list->size = 0;
-    list->capacity = 0;
-    list->free = 0;
+    assert(list != NULL);
 
     free(list->nodes);
-
     list->nodes = NULL;
+    list = NULL;
 }
 
-int list_push_front(List * list, const elem_t value)
+int list_push_front(List* list, const elem_t value)
 {
     return list_insert_before(list, list->nodes[0].next, value);
 }
 
-int list_push_back(List * list, const elem_t value)
+int list_push_back(List* list, const elem_t value)
 {
     return list_insert_after(list, list->nodes[0].prev, value);
 }
 
-int list_pop_front(List * list, elem_t * value)
+int list_pop_front(List* list, elem_t* value)
 {
     return list_delete(list, list->nodes[0].next, value);
 }
 
-int list_pop_back(List * list, elem_t * value)
+int list_pop_back(List* list, elem_t* value)
 {
     return list_delete(list, list->nodes[0].prev, value);
 }
 
-int list_insert_before(List * list, const int index, const elem_t value)
+int list_insert_before(List* list, const int index, const elem_t value)
 {
     #ifdef LIST_PROTECTION
     int err = list_verificator(list);
@@ -115,16 +116,12 @@ int list_insert_before(List * list, const int index, const elem_t value)
     if(err > 0)
     {
         list_dump(list);
-        list_dtor(list);
         return err;
     }
     #endif
 
     if(list->size + 1 == list->capacity)
-    {
-        list->capacity *= COEFF_INCREASE;
-        list_realloc(list);
-    }
+        list_realloc(list, list->capacity * COEFF_INCREASE);
 
     int free = list->free;
     list->free = list->nodes[free].next;
@@ -141,7 +138,7 @@ int list_insert_before(List * list, const int index, const elem_t value)
     return free;
 }
 
-int list_insert_after(List * list, const int index, const elem_t value)
+int list_insert_after(List* list, const int index, const elem_t value)
 {
     #ifdef LIST_PROTECTION
     int err = list_verificator(list);
@@ -156,16 +153,12 @@ int list_insert_after(List * list, const int index, const elem_t value)
     if(err > 0)
     {
         list_dump(list);
-        list_dtor(list);
         return err;
     }
     #endif
 
     if(list->size + 1 == list->capacity)
-    {
-        list->capacity *= COEFF_INCREASE;
-        list_realloc(list);
-    }
+        list_realloc(list, list->capacity * COEFF_INCREASE);
 
     int free = list->free;
     list->free = list->nodes[free].next;
@@ -182,7 +175,7 @@ int list_insert_after(List * list, const int index, const elem_t value)
     return free;
 }
 
-int list_delete(List * list, const int index, elem_t * value)
+int list_delete(List* list, const int index, elem_t* value)
 {
     #ifdef LIST_PROTECTION
     int err = list_verificator(list);
@@ -195,7 +188,6 @@ int list_delete(List * list, const int index, elem_t * value)
     if(err > 0)
     {
         list_dump(list);
-        list_dtor(list);
         return err;
     }
     #endif
@@ -215,7 +207,7 @@ int list_delete(List * list, const int index, elem_t * value)
     return index;
 }
 
-int list_search(List * list, const int logilacIndex)
+int list_search(List* list, const int logilacIndex)
 {
     #ifdef LIST_PROTECTION
     int err = list_verificator(list);
@@ -228,7 +220,6 @@ int list_search(List * list, const int logilacIndex)
     if(err > 0)
     {
         list_dump(list);
-        list_dtor(list);
         return err;
     }
     #endif

@@ -3,7 +3,7 @@
 
 #include "List.h"
 
-void list_dump(const List * list);
-void list_graphic_dump(const List * list);
+void list_dump(List* list);
+void list_graphic_dump(List* list, const char* nameFilePng);
 
 #endif //LISTDUMP_H_INCLUDED

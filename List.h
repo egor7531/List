@@ -23,7 +23,7 @@ struct List
     ListNode * nodes;
 };
 
-enum Errors
+enum List_Errors
 {
     NO_ERRORS               = 0 << 0,
     LIST_IS_NULL            = 1 << 0,
@@ -37,20 +37,23 @@ enum Errors
     CHANGE_FINCTON          = 1 << 8,
     INDEX_LESS_ZERO         = 1 << 9,
     INDEX_IS_FREE           = 1 << 10,
-    VALUE_IS_NULL           = 1 << 11
+    VALUE_IS_NULL           = 1 << 11,
+    FP_IS_NULL              = 1 << 12,
+    ERROR_WORK_SYSTEM       = 1 << 13
 };
 
 List list_ctor(const int initial_capacity);
-void list_dtor(List * list);
+void list_dtor(List* list);
 
-int list_push_front(List * list, const elem_t value);
-int list_push_back(List * list, const elem_t value);
-int list_pop_front(List * list, elem_t * value);
-int list_pop_back(List * list, elem_t * value);
+int list_push_front(List*  list, const elem_t value);
+int list_push_back(List* list, const elem_t value);
+int list_pop_front(List* list, elem_t * value);
+int list_pop_back(List* list, elem_t * value);
 
-int list_insert_after(List * list, const int index, const elem_t value);
-int list_insert_before(List * list, const int index, const elem_t value);
-int list_delete(List * list, const int index, elem_t * value);
-int list_search(List * list, const int logilacIndex);
+int list_insert_after(List* list, const int index, const elem_t value);
+int list_insert_before(List* list, const int index, const elem_t value);
+int list_delete(List* list, const int index, elem_t* value);
+
+int list_search(List* list, const int logilacIndex);
 
 #endif //LIST_H_INCLUDED
